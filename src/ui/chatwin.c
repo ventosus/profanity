@@ -565,7 +565,16 @@ _chatwin_history(ProfChatWin* chatwin, const char* const contact_barejid)
 
         while (curr) {
             ProfMessage* msg = curr->data;
-            msg->plain = plugins_pre_chat_message_display(msg->from_jid->barejid, msg->from_jid->resourcepart, msg->plain);
+
+            if (strcmp(contact_barejid, msg->from_jid->barejid) == 0) {
+                // inject received messages
+                msg->plain = plugins_pre_chat_message_display(msg->from_jid->barejid, msg->from_jid->resourcepart, msg->plain);
+                plugins_post_chat_message_display(msg->from_jid->barejid, msg->from_jid->resourcepart, msg->plain);
+            } else {
+                // inject sent messages
+                msg->plain = plugins_pre_chat_message_send(msg->to_jid->barejid, msg->plain);
+                plugins_post_chat_message_send(msg->to_jid->barejid, msg->plain);
+            }
             win_print_history((ProfWin*)chatwin, msg);
             curr = g_slist_next(curr);
         }
@@ -591,7 +600,15 @@ chatwin_db_history(ProfChatWin* chatwin, const char* start_time, char* end_time,
 
     while (curr) {
         ProfMessage* msg = curr->data;
-        msg->plain = plugins_pre_chat_message_display(msg->from_jid->barejid, msg->from_jid->resourcepart, msg->plain);
+        if (strcmp(chatwin->barejid, msg->from_jid->barejid) == 0) {
+            // inject received messages
+            msg->plain = plugins_pre_chat_message_display(msg->from_jid->barejid, msg->from_jid->resourcepart, msg->plain);
+            plugins_post_chat_message_display(msg->from_jid->barejid, msg->from_jid->resourcepart, msg->plain);
+        } else {
+            // inject sent messages
+            msg->plain = plugins_pre_chat_message_send(msg->to_jid->barejid, msg->plain);
+            plugins_post_chat_message_send(msg->to_jid->barejid, msg->plain);
+        }
         if (flip) {
             win_print_old_history((ProfWin*)chatwin, msg);
         } else {
